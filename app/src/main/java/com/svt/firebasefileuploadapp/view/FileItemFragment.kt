@@ -23,10 +23,6 @@ import java.util.*
  */
 class FileItemFragment : Fragment() {
 
-    private val fileAdapter = FileItemRecyclerViewAdapter(arrayListOf())
-
-    //private var fileList: ArrayList<FileItem> = arrayListOf()
-
     private lateinit var filePath: String
 
     private lateinit var fileEntityViewModel: FileEntityViewModel
@@ -54,7 +50,7 @@ class FileItemFragment : Fragment() {
 
         fileEntityViewModel = ViewModelProvider(this).get(FileEntityViewModel::class.java)
 
-        fileEntityViewModel.allFileEntity.observe(viewLifecycleOwner, Observer { file ->
+        fileEntityViewModel.fileEntityData.observe(viewLifecycleOwner, Observer { file ->
             // Update the cached copy of the words in the adapter.
             file?.let { adapter.setFileEntity(it) }
         })

@@ -19,7 +19,6 @@ class FileEntityRecyclerViewAdapter internal constructor(
     private var fileList = emptyList<FileEntity>() // Cached copy of words
 
     inner class FileEntityHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        //val wordItemView: TextView = itemView.findViewById(R.id.textView)
         val mImgView: ImageView = itemView.findViewById(R.id.imgId)
         val mNameView: TextView = itemView.findViewById(R.id.name)
         val mFileSizeView: TextView = itemView.findViewById(R.id.fileSize)
@@ -33,7 +32,6 @@ class FileEntityRecyclerViewAdapter internal constructor(
 
     override fun onBindViewHolder(holder: FileEntityHolder, position: Int) {
         val current = fileList[position]
-        //holder.wordItemView.text = current.fileName
 
         if (!current.fileName.contains(".")) {
             holder.mImgView.setImageResource(R.mipmap.baseline_folder_open_black_18)

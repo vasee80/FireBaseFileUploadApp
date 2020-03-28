@@ -11,12 +11,12 @@ import kotlinx.coroutines.launch
 
 class FileEntityViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: FileEntityRepository
-    val allFileEntity: LiveData<List<FileEntity>>
+    val fileEntityData: LiveData<List<FileEntity>>
 
     init {
         val fileEntityDao = FileAppRoomDatabase.getDatabase(application).fileEntityDao()
         repository = FileEntityRepository(fileEntityDao)
-        allFileEntity = repository.allFileEntity
+        fileEntityData = repository.allFileEntity
     }
 
     fun insert(fileEntity: FileEntity) = viewModelScope.launch {
