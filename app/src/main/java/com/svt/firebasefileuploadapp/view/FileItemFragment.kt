@@ -5,13 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.svt.firebasefileuploadapp.R
-import com.svt.firebasefileuploadapp.model.FileItem
+import com.svt.firebasefileuploadapp.model.FileEntity
 import com.svt.firebasefileuploadapp.util.AppUtil
-import kotlinx.android.synthetic.main.fragment_file_item_list.*
+import com.svt.firebasefileuploadapp.viewmodel.FileEntityViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -22,9 +25,13 @@ class FileItemFragment : Fragment() {
 
     private val fileAdapter = FileItemRecyclerViewAdapter(arrayListOf())
 
-    private var fileList: ArrayList<FileItem> = arrayListOf()
+    //private var fileList: ArrayList<FileItem> = arrayListOf()
 
     private lateinit var filePath: String
+
+    private lateinit var fileEntityViewModel: FileEntityViewModel
+
+    private var fileId = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,30 +47,30 @@ class FileItemFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_file_item_list, container, false)
 
+        val recyclerView = view.findViewById<RecyclerView>(R.id.list)
+        val adapter = FileEntityRecyclerViewAdapter(requireContext())
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        fileEntityViewModel = ViewModelProvider(this).get(FileEntityViewModel::class.java)
+
+        fileEntityViewModel.allFileEntity.observe(viewLifecycleOwner, Observer { file ->
+            // Update the cached copy of the words in the adapter.
+            file?.let { adapter.setFileEntity(it) }
+        })
+
+        getMetaData()
+
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        list.apply {
-            // set a LinearLayoutManager to handle Android
-            // RecyclerView behavior
-            layoutManager = LinearLayoutManager(activity)
-            // set the custom adapter to the RecyclerView
-            adapter = fileAdapter
-        }
-        getMetaData()
-
-    }
-
     private fun getMetaData(){
-        fileList.clear()
+        fileEntityViewModel.deleteAll()
 
         val storage = FirebaseStorage.getInstance()
 
         val storageRef = storage.reference
-        var dirRef: StorageReference = if (filePath.isEmpty()) {
+        val dirRef: StorageReference = if (filePath.isEmpty()) {
             storageRef
         } else {
             storageRef.child(filePath)
@@ -74,21 +81,22 @@ class FileItemFragment : Fragment() {
                 listResult.prefixes.forEach { prefix ->
                     // All the prefixes under listRef.
                     // You may call listAll() recursively on them.
-                    val item = FileItem(
+
+                    val item = FileEntity(
+                        fileId,
                         prefix.name,
                         prefix.name,
                         prefix.name,
                         prefix.path
                     )
-                    fileList.add(item)
+                    fileEntityViewModel.insert(item)
+                    fileId++
                 }
 
                 listResult.items.forEach { item ->
                     // All the items under listRef.
                     getMetaData(item)
                 }
-
-                fileAdapter.updateFileItem(fileList)
             }
             .addOnFailureListener {
                 // Uh-oh, an error occurred!
@@ -100,20 +108,25 @@ class FileItemFragment : Fragment() {
             val size = data.sizeBytes
             val fileSizeInKB = size / 1024
             val fileSizeInMB = fileSizeInKB / 1024
-            var fileSizeStr = ""
-            fileSizeStr = if (fileSizeInMB > 1) {
-                fileSizeInMB.toString() + "MB"
-            } else if (fileSizeInKB > 1) {
-                fileSizeInKB.toString() + "KB"
-            } else {
-                size.toString() + "B"
+            val fileSizeStr = when {
+                fileSizeInMB > 1 -> {
+                    fileSizeInMB.toString() + "MB"
+                }
+                fileSizeInKB > 1 -> {
+                    fileSizeInKB.toString() + "KB"
+                }
+                else -> {
+                    size.toString() + "B"
+                }
             }
             val lastUpdateDate = data.updatedTimeMillis
             val dateFormat =
-                SimpleDateFormat("dd-MM-yyyy")
+                SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH)
             val date = Date(lastUpdateDate)
+
             val itemFile = data.name?.let {
-                FileItem(
+                FileEntity(
+                    fileId,
                     it,
                     fileSizeStr,
                     dateFormat.format(date),
@@ -121,10 +134,11 @@ class FileItemFragment : Fragment() {
                 )
             }
             if (itemFile != null) {
-                fileList.add(itemFile)
+                fileEntityViewModel.insert(itemFile)
+                fileId++
             }
 
-            fileAdapter.updateFileItem(fileList)
+            //fileAdapter.updateFileItem(fileList)
         }.addOnFailureListener {
             // Uh-oh, an error occurred!
         }
