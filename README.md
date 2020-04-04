@@ -1,2 +1,3 @@
-# FireBaseFileUploadApp
-Upload files to firebase storage and view those files
+# Document Management Mobile Application
+Uploading and storing files from mobile device.
+* Firebase cloud storage used for storing files. 
