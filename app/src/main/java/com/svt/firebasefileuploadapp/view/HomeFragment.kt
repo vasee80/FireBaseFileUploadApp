@@ -25,7 +25,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<Button>(R.id.uploadBttn)
+        view.findViewById<Button>(R.id.homeUploadBttn)
             .setOnClickListener {
                 findNavController().navigate(R.id.fileUpload_dest)
             }
